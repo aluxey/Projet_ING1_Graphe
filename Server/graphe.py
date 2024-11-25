@@ -1,6 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import List, Dict, Set, DefaultDict, Optional
+from difflib import diff_bytes
+from typing import List, Dict, Set, DefaultDict, Optional, Tuple
 import json
 import os
 from pathlib import Path
@@ -9,9 +10,9 @@ from pathlib import Path
 class Station:
     id: int
     name: str
-    ligne: str
-    terminus: str
-    branchement: str
+    ligne: {str: str}
+    terminus: bool
+    voisins: List[Tuple["Station", int]]
 
 @dataclass
 class Edge:
@@ -202,5 +203,105 @@ def main():
         print(f"Error: {str(e)}")
         raise
 
-if __name__ == "__main__":
-    main()
+def dijkstra(depart: Station, arrivee: Station):
+    # Pour chaque station : sa précédente station + le temps pour arriver à la station en question
+    stations: {Station: [Station, int]} = {}
+    # Liste des stations déjà traitées
+    stations_traitees: List[Station] = []
+    # La station : le temps pour arriver à cette station
+    current_station: Tuple[Station, int] = (depart, 0)
+
+    no_station_available: bool = False
+
+    while current_station[0] != arrivee and not no_station_available:
+        stations_traitees.append(current_station[0])
+        # parcours les stations voisines pour modifier leur parcours
+        for neighbor_station in current_station[0].voisins:
+            # pas encore ajouté
+            if stations[neighbor_station[0]] is None:
+                stations[neighbor_station[0]] = [current_station[0], current_station[1] + neighbor_station[1]]
+            else:
+                # modifie la station précédente si c'est plus rapide avec ce chemin qu'avec l'ancien
+                potential_new_time: int = current_station[1] + neighbor_station[1]
+                if potential_new_time < stations[neighbor_station[0]][1]:
+                    stations[neighbor_station[0]] = [current_station[0], potential_new_time]
+        # choisi la nouvelle station à traiter
+        selected_station: [Station, int] = None
+        for station in stations.keys():
+            if station not in stations_traitees:
+                if selected_station is None:
+                    selected_station = stations[station]
+                else:
+                    if stations[station][1] < selected_station[1]:
+                        selected_station = stations[station]
+        if selected_station is None:
+            no_station_available = True
+        else:
+            current_station = selected_station
+
+    if no_station_available:
+        return None
+    return stations
+
+
+
+
+
+# if __name__ == "__main__":
+#     main()
+
+
+quinconces: Station = Station(1, "quinconces", {"3": "0"}, True, [])
+debut: Station = Station(1, "debut", {"3": "0"}, False, [])
+republique: Station = Station(1, "repblique", {"3": "0"}, False, [])
+eglise: Station = Station(1, "eglise", {"3": "2"}, False, [])
+issac: Station = Station(1, "issac", {"3": "2"}, True, [])
+zola: Station = Station(1, "zola", {"3": "1"}, False, [])
+lycee: Station = Station(1, "lycee", {"3": "1", "84": "0"}, False, [])
+villepreux: Station = Station(1, "villepreux", {"3": "1"}, True, [])
+proust: Station = Station(1, "proust", {"84": "0"}, True, [])
+cantinole: Station = Station(1, "cantinole", {"84": "0"}, False, [])
+fin: Station = Station(1, "fin", {"84": "2"}, False, [])
+rostand: Station = Station(1, "rostand", {"84": "2"}, True, [])
+cinq_chemins: Station = Station(1, "5 chemins", {"84": "1"}, False, [])
+aeroport: Station = Station(1, "aeroport", {"84": "1"}, True, [])
+
+quinconces.voisins.append((debut, 2))
+debut.voisins.append((quinconces, 2))
+debut.voisins.append((republique, 3))
+republique.voisins.append((debut, 3))
+republique.voisins.append((eglise, 2))
+republique.voisins.append((zola, 1))
+eglise.voisins.append((republique, 3))
+eglise.voisins.append((issac, 1))
+issac.voisins.append((eglise, 1))
+zola.voisins.append((republique, 1))
+zola.voisins.append((lycee, 2))
+lycee.voisins.append((zola, 2))
+lycee.voisins.append((villepreux, 2))
+lycee.voisins.append((proust, 1))
+lycee.voisins.append((cantinole, 1))
+villepreux.voisins.append((lycee, 2))
+proust.voisins.append((lycee, 1))
+cantinole.voisins.append((lycee, 1))
+cantinole.voisins.append((fin, 3))
+cantinole.voisins.append((cinq_chemins, 3))
+fin.voisins.append((cantinole, 3))
+fin.voisins.append((rostand, 2))
+rostand.voisins.append((fin, 2))
+cinq_chemins.voisins.append((cantinole, 3))
+cinq_chemins.voisins.append((aeroport, 2))
+aeroport.voisins.append((cinq_chemins, 2))
+
+# stations_test = dijkstra(debut, fin)
+# if stations_test is None:
+#     print("envie de creuver")
+# else:
+#     print(stations_test)
+
+
+test = (quinconces, 1)
+print(test)
+print(test[0])
+print(test[1])
+print(quinconces == test[0])
