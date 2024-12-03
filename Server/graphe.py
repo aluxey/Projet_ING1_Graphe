@@ -14,6 +14,31 @@ class Station:
     terminus: bool
     voisins: List[Tuple["Station", int]]
 
+    # Implémentation de la méthode __hash__ pour rendre l'objet hashable
+    def __hash__(self):
+        return hash((self.id, self.name))
+
+    # Implémentation de la méthode __eq__ pour comparer deux objets Station
+    def __eq__(self, other):
+        if isinstance(other, Station):
+            return self.id == other.id and self.name == other.name
+        return False
+
+    def __str__(self):
+        # Retourne une chaîne de caractères pour l'affichage
+        voisins_str = ", ".join([f"{v[0].name}({v[0].id})" for v in self.voisins])
+        return (f"Station(id={self.id}, "
+                f"name={self.name}, "
+                f"lignes={self.ligne}, "
+                f"terminus={'Oui' if self.terminus else 'Non'}, "
+                f"voisins=[{voisins_str}])")
+
+    def __repr__(self):
+        return self.__str__()
+
+    def get_essential_info(self):
+        return f"{self.name} ({self.id})"
+
 @dataclass
 class Edge:
     start: int
@@ -203,68 +228,77 @@ def main():
         print(f"Error: {str(e)}")
         raise
 
+
 def dijkstra(depart: Station, arrivee: Station):
-    # Pour chaque station : sa précédente station + le temps pour arriver à la station en question
-    stations: {Station: [Station, int]} = {}
-    # Liste des stations déjà traitées
-    stations_traitees: List[Station] = []
-    # La station : le temps pour arriver à cette station
-    current_station: Tuple[Station, int] = (depart, 0)
+    # Pour chaque id station : id station provenance + le temps pour arriver à la station en question depuis le debut
+    stations: {int: Tuple[int, int]} = {}
+    # Liste des id stations déjà traitées
+    stations_traitees: List[int] = []
+    # id station : le temps pour arriver à cette station
+    current_station: Tuple[int, int] = (depart.id, 0)
 
     no_station_available: bool = False
 
-    while current_station[0] != arrivee and not no_station_available:
+    while current_station[0] != arrivee.id and not no_station_available:
         stations_traitees.append(current_station[0])
+
+        real_station = get_station_by_id(current_station[0])
         # parcours les stations voisines pour modifier leur parcours
-        for neighbor_station in current_station[0].voisins:
-            # pas encore ajouté
-            if stations[neighbor_station[0]] is None:
-                stations[neighbor_station[0]] = [current_station[0], current_station[1] + neighbor_station[1]]
-            else:
-                # modifie la station précédente si c'est plus rapide avec ce chemin qu'avec l'ancien
-                potential_new_time: int = current_station[1] + neighbor_station[1]
-                if potential_new_time < stations[neighbor_station[0]][1]:
-                    stations[neighbor_station[0]] = [current_station[0], potential_new_time]
+        for neighbor_station in real_station.voisins:
+            # ne traite pas le sommet de depart
+            if neighbor_station[0].id != debut.id:
+                # pas encore ajouté
+                if stations.get(neighbor_station[0].id) is None:
+                    stations[neighbor_station[0].id] = (current_station[0], current_station[1] + neighbor_station[1])
+                else:
+                    # modifie la station précédente si c'est plus rapide avec ce chemin qu'avec l'ancien
+                    potential_new_time: int = current_station[1] + neighbor_station[1]
+                    if potential_new_time < stations[neighbor_station[0].id][1]:
+                        stations[neighbor_station[0].id] = [current_station[0], potential_new_time]
         # choisi la nouvelle station à traiter
-        selected_station: [Station, int] = None
+        selected_station: [int, int] = None
         for station in stations.keys():
             if station not in stations_traitees:
                 if selected_station is None:
-                    selected_station = stations[station]
+                    selected_station = (station, stations[station][1])
                 else:
                     if stations[station][1] < selected_station[1]:
-                        selected_station = stations[station]
+                        selected_station = (station, stations[station][1])
         if selected_station is None:
             no_station_available = True
         else:
             current_station = selected_station
 
+    # gerer le cas où dijkstra plante :
     if no_station_available:
         return None
     return stations
 
 
-
-
+def get_station_by_id(station_id):
+    for station in all_stations:
+        if station.id == station_id:
+            return station
+    return None
 
 # if __name__ == "__main__":
 #     main()
 
 
 quinconces: Station = Station(1, "quinconces", {"3": "0"}, True, [])
-debut: Station = Station(1, "debut", {"3": "0"}, False, [])
-republique: Station = Station(1, "repblique", {"3": "0"}, False, [])
-eglise: Station = Station(1, "eglise", {"3": "2"}, False, [])
-issac: Station = Station(1, "issac", {"3": "2"}, True, [])
-zola: Station = Station(1, "zola", {"3": "1"}, False, [])
-lycee: Station = Station(1, "lycee", {"3": "1", "84": "0"}, False, [])
-villepreux: Station = Station(1, "villepreux", {"3": "1"}, True, [])
-proust: Station = Station(1, "proust", {"84": "0"}, True, [])
-cantinole: Station = Station(1, "cantinole", {"84": "0"}, False, [])
-fin: Station = Station(1, "fin", {"84": "2"}, False, [])
-rostand: Station = Station(1, "rostand", {"84": "2"}, True, [])
-cinq_chemins: Station = Station(1, "5 chemins", {"84": "1"}, False, [])
-aeroport: Station = Station(1, "aeroport", {"84": "1"}, True, [])
+debut: Station = Station(2, "debut", {"3": "0"}, False, [])
+republique: Station = Station(3, "repblique", {"3": "0"}, False, [])
+eglise: Station = Station(4, "eglise", {"3": "2"}, False, [])
+issac: Station = Station(5, "issac", {"3": "2"}, True, [])
+zola: Station = Station(6, "zola", {"3": "1"}, False, [])
+lycee: Station = Station(7, "lycee", {"3": "1", "84": "0"}, False, [])
+villepreux: Station = Station(8, "villepreux", {"3": "1"}, True, [])
+proust: Station = Station(9, "proust", {"84": "0"}, True, [])
+cantinole: Station = Station(10, "cantinole", {"84": "0"}, False, [])
+fin: Station = Station(11, "fin", {"84": "2"}, False, [])
+rostand: Station = Station(12, "rostand", {"84": "2"}, True, [])
+cinq_chemins: Station = Station(13, "5 chemins", {"84": "1"}, False, [])
+aeroport: Station = Station(14, "aeroport", {"84": "1"}, True, [])
 
 quinconces.voisins.append((debut, 2))
 debut.voisins.append((quinconces, 2))
@@ -293,15 +327,13 @@ cinq_chemins.voisins.append((cantinole, 3))
 cinq_chemins.voisins.append((aeroport, 2))
 aeroport.voisins.append((cinq_chemins, 2))
 
-# stations_test = dijkstra(debut, fin)
-# if stations_test is None:
-#     print("envie de creuver")
-# else:
-#     print(stations_test)
+all_stations = [quinconces, debut, republique, eglise, issac, zola, lycee, villepreux, proust, cantinole, fin, rostand,
+                cinq_chemins, aeroport]
 
 
-test = (quinconces, 1)
-print(test)
-print(test[0])
-print(test[1])
-print(quinconces == test[0])
+
+stations_test = dijkstra(debut, fin)
+if stations_test is None:
+    print("envie de creuver")
+else:
+    print(stations_test)
