@@ -5,12 +5,13 @@ from typing import List, Dict, Set, DefaultDict, Optional, Tuple
 import json
 import os
 from pathlib import Path
+from typing import Dict
 
 @dataclass
 class Station:
     id: int
     name: str
-    ligne: {str: str}
+    ligne: Dict[str, str]
     terminus: bool
     voisins: List[Tuple["Station", int]]
 
