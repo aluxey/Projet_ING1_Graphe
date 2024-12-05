@@ -40,18 +40,6 @@ class Station:
     def get_essential_info(self):
         return f"{self.name} ({self.id})"
 
-@dataclass
-class Edge:
-    start: int
-    end: int
-    time: int
-
-@dataclass
-class Position:
-    posX: float
-    posY: float
-    nom_station: str
-
 class MetroNetwork:
     def __init__(self, input_file: str, positions_file: str):
         self.input_file = Path(input_file)

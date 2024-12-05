@@ -4,16 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Metro Map</title>
-    <link rel="stylesheet" href="node_modules/leaflet/dist/leaflet.css">
-    <style>
-        #map {
-            height: 100vh; /* Full screen map */
-        }
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.21.1/cytoscape.min.js"></script>
+    <link rel="stylesheet" href="Styles/index.css">
 </head>
 <body>
-    <div id="map"></div>
-    <script src="node_modules/leaflet/dist/leaflet.js"></script>
-    <script src="script.js"></script>
+    <section id="contextMenu" class="context-menu">
+        <input type="text" id="search" placeholder="Search for a station">
+
+        <h2>Stations : </h2>
+        <ul id="stationList">
+        </ul>
+        
+        <p id="time">You will take ... mins to reach your destination</p>
+    </section>
+
+    <section id="map">
+        <div id="cy"></div>
+        <div class="tooltip" id="tooltip"></div>
+    </section>
+    <script src="Script/main.js"></script>
+    <script src="Script/searchbar.js"></script>
 </body>
 </html>

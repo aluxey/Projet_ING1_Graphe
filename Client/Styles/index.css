@@ -1,0 +1,94 @@
+body {
+  background-color: #f4f4f4;
+  display: flex;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+#contextMenu {
+  width: 300px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  box-sizing: border-box;
+  border-right: 1px solid #ddd;
+}
+
+#contextMenu input {
+  width: 90%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+#contextMenu ul {
+  list-style: none;
+  padding: 10px;
+  margin: 10px 0;
+  max-height: 60vh;
+  overflow: scroll;
+
+  background: grey;
+}
+
+#contextMenu ul li {
+  padding: 10px;
+  
+  background-color: #f9f9f9;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#contextMenu ul li:hover {
+  background-color: #e0e0e0;
+}
+
+#contextMenu p {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #555;
+}
+
+#map {
+  flex: 1;
+  position: relative;
+}
+
+#cy {
+  width: 100%;
+  height: 100vh;
+  display: block;
+  background-color: #eaeaea;
+}
+
+.tooltip {
+  position: absolute;
+  display: none;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@media (max-width: 768px) {
+  #contextMenu {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+  }
+
+  #map {
+    flex: none;
+  }
+
+  #cy {
+    height: calc(100vh - 200px);
+  }
+}
