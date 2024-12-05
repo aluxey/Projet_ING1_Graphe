@@ -77,6 +77,65 @@ body {
   z-index: 10;
 }
 
+/* General container styling */
+.parcours-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 15px;
+  margin: 20px;
+  border: 2px solid #007BFF;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  max-width: 400px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Button styling */
+.parcours-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  background-color: #007BFF;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.parcours-button:hover {
+  background-color: #0056b3;
+}
+
+/* Status and selected station styles */
+.parcours-status,
+.parcours-selected,
+.parcours-path {
+  font-size: 16px;
+  margin: 10px 0;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Highlight "On" or "Off" status */
+.parcours-status {
+  font-weight: bold;
+  color: #555;
+}
+
+.parcours-status:before {
+  content: "🟢 ";
+  color: green;
+}
+
+.parcours-status:contains('Off'):before {
+  content: "🔴 ";
+  color: red;
+}
+
+
+
 @media (max-width: 768px) {
   #contextMenu {
     width: 100%;

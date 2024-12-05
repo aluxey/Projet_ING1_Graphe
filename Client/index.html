@@ -1,28 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Metro Map</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.21.1/cytoscape.min.js"></script>
-    <link rel="stylesheet" href="Styles/index.css">
-</head>
-<body>
+    <link rel="stylesheet" href="Styles/index.css" />
+  </head>
+  <body>
     <section id="contextMenu" class="context-menu">
-        <input type="text" id="search" placeholder="Search for a station">
+      <input type="text" id="search" placeholder="Search for a station" />
 
-        <h2>Stations : </h2>
-        <ul id="stationList">
-        </ul>
-        
-        <p id="time">You will take ... mins to reach your destination</p>
+      <div class="parcours-container">
+        <button id="toggleParcours" class="parcours-button">
+          Toggle Parcours Mode
+        </button>
+        <p id="parcoursStatus" class="parcours-status">Parcours Mode: Off</p>
+        <p id="selectedStations" class="parcours-selected">Selected: None</p>
+        <p id="fastestPath" class="parcours-path">Path: None</p>
+      </div>
+
+      <h2>Stations :</h2>
+      <ul id="stationList"></ul>
+
+      <p id="time">You will take ... mins to reach your destination</p>
     </section>
 
     <section id="map">
-        <div id="cy"></div>
-        <div class="tooltip" id="tooltip"></div>
+      <div id="cy"></div>
+      <div class="tooltip" id="tooltip"></div>
     </section>
     <script src="Script/main.js"></script>
     <script src="Script/searchbar.js"></script>
-</body>
+    <script src="Script/parcours.js"></script>
+  </body>
 </html>
