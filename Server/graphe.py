@@ -1,6 +1,8 @@
 from collections import defaultdict
+from collections.abc import dict_keys
 from dataclasses import dataclass
 from difflib import diff_bytes
+from shutil import disk_usage
 from typing import List, Dict, Set, DefaultDict, Optional, Tuple
 import json
 import os
@@ -10,7 +12,8 @@ from pathlib import Path
 class Station:
     id: int
     name: str
-    ligne: {str: str}
+    # ligne : embranchement
+    lignes: {str: str}
     terminus: bool
     voisins: List[Tuple["Station", int]]
 
@@ -29,7 +32,7 @@ class Station:
         voisins_str = ", ".join([f"{v[0].name}({v[0].id})" for v in self.voisins])
         return (f"Station(id={self.id}, "
                 f"name={self.name}, "
-                f"lignes={self.ligne}, "
+                f"lignes={self.lignes}, "
                 f"terminus={'Oui' if self.terminus else 'Non'}, "
                 f"voisins=[{voisins_str}])")
 
@@ -240,23 +243,27 @@ def dijkstra(depart: Station, arrivee: Station):
     no_station_available: bool = False
 
     while current_station[0] != arrivee.id and not no_station_available:
+        print(current_station[0])
         stations_traitees.append(current_station[0])
 
         real_station = get_station_by_id(current_station[0])
         # parcours les stations voisines pour modifier leur parcours
         for neighbor_station in real_station.voisins:
+            neighbor_id = neighbor_station[0].id
+            neighbor_time_travel = neighbor_station[1]
+
             # ne traite pas le sommet de depart
-            if neighbor_station[0].id != debut.id:
+            if neighbor_id != debut.id:
                 # pas encore ajouté
-                if stations.get(neighbor_station[0].id) is None:
-                    stations[neighbor_station[0].id] = (current_station[0], current_station[1] + neighbor_station[1])
+                if stations.get(neighbor_id) is None:
+                    stations[neighbor_id] = (current_station[0], current_station[1] + neighbor_time_travel)
                 else:
                     # modifie la station précédente si c'est plus rapide avec ce chemin qu'avec l'ancien
-                    potential_new_time: int = current_station[1] + neighbor_station[1]
-                    if potential_new_time < stations[neighbor_station[0].id][1]:
-                        stations[neighbor_station[0].id] = [current_station[0], potential_new_time]
+                    potential_new_time: int = current_station[1] + neighbor_time_travel
+                    if potential_new_time < stations[neighbor_id][1]:
+                        stations[neighbor_id] = [current_station[0], potential_new_time]
         # choisi la nouvelle station à traiter
-        selected_station: [int, int] = None
+        selected_station: (int, int) = None
         for station in stations.keys():
             if station not in stations_traitees:
                 if selected_station is None:
@@ -269,6 +276,7 @@ def dijkstra(depart: Station, arrivee: Station):
         else:
             current_station = selected_station
 
+    print(current_station[0])
     # gerer le cas où dijkstra plante :
     if no_station_available:
         return None
@@ -287,11 +295,12 @@ def get_station_by_id(station_id):
 
 quinconces: Station = Station(1, "quinconces", {"3": "0"}, True, [])
 debut: Station = Station(2, "debut", {"3": "0"}, False, [])
-republique: Station = Station(3, "repblique", {"3": "0"}, False, [])
+republique: Station = Station(3, "republique", {"3": "0"}, False, [])
 eglise: Station = Station(4, "eglise", {"3": "2"}, False, [])
 issac: Station = Station(5, "issac", {"3": "2"}, True, [])
 zola: Station = Station(6, "zola", {"3": "1"}, False, [])
 lycee: Station = Station(7, "lycee", {"3": "1", "84": "0"}, False, [])
+# lycee: Station = Station(7, "lycee", {"3": "1"}, False, [])
 villepreux: Station = Station(8, "villepreux", {"3": "1"}, True, [])
 proust: Station = Station(9, "proust", {"84": "0"}, True, [])
 cantinole: Station = Station(10, "cantinole", {"84": "0"}, False, [])
@@ -332,8 +341,140 @@ all_stations = [quinconces, debut, republique, eglise, issac, zola, lycee, ville
 
 
 
-stations_test = dijkstra(debut, fin)
-if stations_test is None:
+
+def trouver_chemin(tab_dijkstra, debut: Station, fin: Station):
+    current_id = fin.id
+    while current_id != debut.id:
+        print(get_station_by_id(current_id).name)
+        current_id = tab_dijkstra[current_id][0]
+    print(debut.name)
+
+def get_common_line(station1: Station, station2: Station):
+    return station1.lignes.keys() & station2.lignes.keys()
+
+def calcul_direction(deja_vu: List, lst_terminus: set, current: Station, final_dest: Station, ligne: str, trouve: bool):
+    new_trouve = trouve or current.id == final_dest.id
+    deja_vu.append(current.id)
+    for voisin in current.voisins:
+        if (voisin[0].id not in deja_vu) and (ligne in voisin[0].lignes.keys()):
+            # deja_vu.append(voisin[0].id)
+            if voisin[0].terminus:
+                if new_trouve:
+                    lst_terminus.add(voisin[0].name)
+            else:
+                calcul_direction(deja_vu, lst_terminus, voisin[0], final_dest, ligne, new_trouve)
+
+def get_all_possible_destinations(first_station: Station, last_station: Station, ligne: str):
+    # print()
+    # print()
+    # print()
+    terminus = set()
+    calcul_direction([], terminus, first_station, last_station, ligne, False)
+    return terminus
+
+t = get_all_possible_destinations(lycee, republique, "3")
+print(t)
+
+def get_ligne_optimale(dijkstra: {int: Tuple[int, int]}, initial: Station):
+    current = initial
+    lst_lignes = set(current.lignes.keys())
+    while len(lst_lignes) != 0 or len(lst_lignes) != 1:
+        # if dijkstra[current.id] is None: # si actual current est le noeud de depart
+
+        current = get_station_by_id(dijkstra[current.id][0])
+        lst_lignes_suivantes = lst_lignes & current.lignes.keys()
+        print(lst_lignes_suivantes)
+        if len(lst_lignes_suivantes) == 1:
+            return next(iter(lst_lignes_suivantes)) # taille 1, donc le seul élément
+        if len(lst_lignes_suivantes) == 0:
+            return next(iter(lst_lignes)) # n'importe laquelle des lignes
+        lst_lignes = lst_lignes_suivantes
+    if len(lst_lignes) == 1:
+        return lst_lignes[0]
+    if len(lst_lignes) == 0:
+        return None #
+
+def choix_lignes(dijkstra: {int: Tuple[int, int]}, arrivee: int):
+    ligne_choisie: str = None
+    ligne_par_arret = []#: [(int, str)] = []
+    current = get_station_by_id(arrivee)
+    ligne_par_arret.append((current.id, get_ligne_optimale(dijkstra, current)))
+    while current.id in dijkstra:
+        x = get_station_by_id(dijkstra[current.id][0])
+        lignes_possible = current.lignes.keys() & x.lignes.keys()
+        if len(lignes_possible) == 0: # pas de ligne commune -> besoin de marcher
+            ligne_choisie = get_ligne_optimale(dijkstra, x)
+            ligne_par_arret.append((x.id, ligne_choisie + "-marche"))
+        else:
+            if ligne_choisie not in lignes_possible: # la ligne courante n'est plus sur le trajet -> besoin de changer de metro
+                ligne_choisie = get_ligne_optimale(dijkstra, current)
+            ligne_par_arret.append((x.id, ligne_choisie))
+        current = x
+    return ligne_par_arret
+
+
+
+
+dijkstra_test = dijkstra(debut, cantinole)
+if dijkstra_test is None:
     print("envie de creuver")
 else:
-    print(stations_test)
+    print(dijkstra_test)
+
+print()
+trouver_chemin(dijkstra_test, debut, cantinole)
+
+t1: Station = Station(1, "t1", {"71": "1", "3": "2", "8": "0"}, True, [])
+t2: Station = Station(1, "t1", {"3": "0", "8": "1", "80": "1"}, True, [])
+print(get_common_line(t1, t2))
+
+print()
+choix_l = choix_lignes(dijkstra_test, cantinole.id)
+
+def trier_choix_lignes(choix_l: [(int, str)], dijkstra: {int: Tuple[int, int]}, temps: int):
+    choix_lignes = choix_l
+    choix_lignes.reverse()
+    print(choix_lignes)
+    index_parcours = 0
+    init = choix_lignes[index_parcours]
+    fin = choix_lignes[0]
+    ligne = init[1]
+    doit_marcher = False
+    index_parcours += 1
+    est_fini = False
+    next = choix_lignes[index_parcours]
+    affiche_indication = False
+    print(f"Débutez à la station {get_station_by_id(init[0]).name}")
+    while not est_fini:
+        if next[1] == init[1] or next[1].startswith(init[1] + "-"): # on peut rester sur la meme ligne
+            fin = next
+            if next[1].startswith(init[1] + "-"):
+                doit_marcher = True
+        else: # changement de ligne
+            if doit_marcher:
+                print(f"Prenez la ligne {ligne} direction {get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne)} jusqu'à {get_station_by_id(fin[0]).name}")
+                print(f"Marchez jusqu'à la station {get_station_by_id(next[0]).name}")
+            else:
+                print(f"Prenez la ligne {ligne} direction {get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne)} jusqu'à {get_station_by_id(next[0]).name}")
+            affiche_indication = True
+            init = next
+            ligne = init[1].split("-", 1)[0]
+            doit_marcher = False
+        if index_parcours == (len(choix_lignes) - 1): # si on est sur le dernier sommet
+            if not affiche_indication:
+                print(f"Prenez la ligne {ligne} direction {get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne)} jusqu'à {get_station_by_id(next[0]).name}")
+            print(f"Vous devriez arriver à {get_station_by_id(next[0]).name} en {temps} minutes")
+            est_fini = True
+        else:
+            affiche_indication = False
+            index_parcours += 1
+            next = choix_lignes[index_parcours]
+
+print(choix_l)
+trier_choix_lignes(choix_l, None, 10)
+
+
+
+testt = get_all_possible_destinations(cantinole, fin, "84")
+print()
+print(testt)
