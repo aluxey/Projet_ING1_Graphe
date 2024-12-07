@@ -1,23 +1,19 @@
-async function loadMetroData() {
-  const response = await fetch("/Server/Data/merged_data.json");
-  if (!response.ok) throw new Error("Failed to fetch station data");
-  return response.json();
-}
-
 const searchInput = document.getElementById("search");
 const stationList = document.getElementById("stationList");
-const lineList = document.getElementById("lineList");
 
 let stations = [];
 let lines = [];
 
+// Initialize data on page load
+initializeData();
+searchInput.addEventListener("input", onSearchInput);
 
 /**
- * Initialize the search bar by loading the metro data
+ * Loads station data from the server and stores it locally.
  */
-async function initialize() {
+async function initializeData() {
   try {
-    const data = await loadMetroData();
+    const data = await fetchMetroData();
     stations = data.stations || [];
     lines = data.lines || [];
     console.log("Stations and lines loaded:", stations, lines);
@@ -28,49 +24,55 @@ async function initialize() {
 }
 
 /**
- * Filter the stations based on the search query
- * @param {*} query  What the user type in the search bar
- * @returns The stations that match the search query
+ * Fetches the merged data from the server.
+ * @returns {Promise<Object>} The JSON containing stations and lines.
+ */
+async function fetchMetroData() {
+  const response = await fetch("/Server/Data/merged_data.json");
+  if (!response.ok) throw new Error("Failed to fetch station data");
+  return response.json();
+}
+
+/**
+ * Handler for search input change events.
+ * @param {Event} event The input event from the search field.
+ */
+function onSearchInput(event) {
+  const query = event.target.value;
+  const filteredStations = filterStations(query);
+  updateSearchResults(filteredStations);
+}
+
+/**
+ * Filters stations by query matching station name or line.
+ * @param {string} query The search query from the user.
+ * @returns {Array} List of stations that match the query.
  */
 function filterStations(query) {
   const lowerQuery = query.toLowerCase().trim();
 
   return stations.filter(
     (station) =>
-      station.name.toLowerCase().includes(lowerQuery) || // Match station name
-      station.ligne.toLowerCase().includes(lowerQuery) // Match line
+      station.name.toLowerCase().includes(lowerQuery) ||
+      station.ligne.toLowerCase().includes(lowerQuery)
   );
 }
 
 /**
- * 
- * @param {*} results 
- * @returns 
+ * Updates the displayed station list based on search results.
+ * @param {Array} results The filtered list of stations.
  */
-// Function to update the displayed search results
 function updateSearchResults(results) {
-    // Clear previous results
-    stationList.innerHTML = "";
+  stationList.innerHTML = "";
 
-    if (results.length === 0) {
-        stationList.innerHTML = "<li>No stations found</li>";
-        return;
-    }
+  if (results.length === 0) {
+    stationList.innerHTML = "<li>No stations found</li>";
+    return;
+  }
 
-    // Populate station list with station name and line
-    results.forEach((station) => {
-        const stationItem = document.createElement("li");
-        stationItem.textContent = `${station.name} (Line ${station.ligne})`;
-        stationList.appendChild(stationItem);
-    });
+  results.forEach((station) => {
+    const stationItem = document.createElement("li");
+    stationItem.textContent = `${station.name} (Line ${station.ligne})`;
+    stationList.appendChild(stationItem);
+  });
 }
-
-// Event listener for the search input
-searchInput.addEventListener("input", (event) => {
-  const query = event.target.value;
-  const filteredStations = filterStations(query);
-  updateSearchResults(filteredStations);
-});
-
-// Initialize the data when the page loads
-initialize();

@@ -8,30 +8,44 @@
     <link rel="stylesheet" href="Styles/index.css" />
   </head>
   <body>
-    <section id="contextMenu" class="context-menu">
-      <input type="text" id="search" placeholder="Search for a station" />
+    <div class="app-container">
+      <aside class="sidebar">
+        <header class="sidebar-header">
+          <h1>Metro Navigator</h1>
+        </header>
 
-      <div class="parcours-container">
-        <button id="toggleParcours" class="parcours-button">
-          Toggle Parcours Mode
-        </button>
-        <p id="parcoursStatus" class="parcours-status">Parcours Mode: Off</p>
-        <p id="selectedStations" class="parcours-selected">Selected: None</p>
-        <p id="fastestPath" class="parcours-path">Path: None</p>
-      </div>
+        <div class="search-container">
+          <input type="text" id="search" placeholder="Search for a station" />
+        </div>
 
-      <h2>Stations :</h2>
-      <ul id="stationList"></ul>
+        <div class="station-list-container">
+          <h2>Stations :</h2>
+          <ul id="stationList"></ul>
+        </div>
 
-      <p id="time">You will take ... mins to reach your destination</p>
-    </section>
+        <div class="station_depart">
+          <h2>Departure Station</h2>
+          <p id="depart"></p>
+        </div>
 
-    <section id="map">
-      <div id="cy"></div>
-      <div class="tooltip" id="tooltip"></div>
-    </section>
-    <script src="Script/main.js"></script>
-    <script src="Script/searchbar.js"></script>
-    <script src="Script/parcours.js"></script>
+        <div class="station_arrive">
+          <h2>Arrival Station</h2>
+          <p id="arrive"></p>
+        </div>
+
+        <p id="time" class="time-info">
+          You will take ... mins to reach your destination
+        </p>
+      </aside>
+
+      <main class="map-container">
+        <div id="cy"></div>
+        <div class="tooltip" id="tooltip"></div>
+      </main>
+    </div>
+
+    <script type="module" src="Script/main.js"></script>
+    <script type="module" src="Script/searchbar.js"></script>
+    <script type="module" src="Script/parcours.js"></script>
   </body>
 </html>

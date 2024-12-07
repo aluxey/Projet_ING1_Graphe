@@ -1,45 +1,107 @@
+import cy from "./cytoscape.js";
+
+
 let departStation = null;
 let arriveStation = null;
-let isParcoursMode = false; // Track toggle state
 
-const parcoursButton = document.getElementById("toggleParcours");
+// DOM elements
 
-parcoursButton.addEventListener("click", () => {
-  isParcoursMode = !isParcoursMode;
-  document.getElementById("parcoursStatus").textContent = `Parcours Mode: ${isParcoursMode ?"On" : "Off"}`;
+const selectedStationsDisplay = document.getElementById("selectedStations");
+const fastestPathDisplay = document.getElementById("fastestPath");
+const stationList = document.getElementById("stationList");
 
-  // Reset selections if exiting Parcours Mode
-  if (!isParcoursMode) {
-    departStation = null;
-    arriveStation = null;
+parcoursButton.addEventListener("click", toggleParcoursMode);
+stationList.addEventListener("click", onStationListClick);
 
-    document.getElementById("selectedStations").textContent = "Selected: None";
-    document.getElementById("fastestPath").textContent = "Path: None";
-  }
-});
+/**
+ * Toggles the Parcours mode on or off.
+ */
 
 
-// Function to handle station clicks
-function handleStationClick(stationName) {
-  if (!isParcoursMode) return; // Only allow selection in Parcours Mode
-
-  if (!departStation) {
-    departStation = stationName;
-  } else if (!arriveStation && stationName !== departStation) {
-    arriveStation = stationName;
+/**
+ * Resets the current selections and UI updates when Parcours mode is turned off.
+ */
+function resetSelections() {
+  // Clear departure station
+  if (departStation) {
+    const departNode = cy.$(`node[name="${departStation}"]`);
+    departNode.data("depart", "False");
   }
 
-  // Update the UI with the current selections
-  document.getElementById("selectedStations").textContent = `Selected: ${departStation || "None"} -> ${arriveStation || "None"}`;
+  // Clear arrival station
+  if (arriveStation) {
+    const arriveNode = cy.$(`node[name="${arriveStation}"]`);
+    arriveNode.data("destination", "False");
+  }
 
-  // If both stations are selected, calculate the path
-  if (departStation && arriveStation) {
-    alert("Calculating path... (ca va arriver un jour insh)");
+  departStation = null;
+  arriveStation = null;
+
+  updateUI();
+}
+
+/**
+ * Handles station selection triggered by clicking on a station name in the list.
+ * @param {MouseEvent} event The click event on the station list.
+ */
+function onStationListClick(event) {
+  if (event.target && event.target.tagName === "LI") {
+    const stationName = event.target.textContent.split(" (")[0];
+    handleStationSelection(stationName);
   }
 }
 
-// Add event listeners to station list items
-document.getElementById("stationList").addEventListener("click", (event) => {
-  const stationName = event.target.textContent.split(" (")[0]; // Extract station name
-  handleStationClick(stationName);
-});
+/**
+ * Manages the logic of selecting or deselecting departure/arrival stations.
+ * @param {string} stationName The name of the station selected.
+ */
+function handleStationSelection(stationName) {
+  const stationNode = cy.elements(`[name="${stationName}"]`);
+
+  if (stationNode.empty()) {
+    console.warn(`No station found for name: ${stationName}`);
+    return;
+  }
+
+  // If no departure yet, set this as departure
+  if (!departStation) {
+    departStation = stationName;
+    stationNode.data("depart", "True");
+    stationNode.data("destination", "False");
+
+    // If no arrival yet and it's different from departure, set as arrival
+  } else if (!arriveStation && stationName !== departStation) {
+    arriveStation = stationName;
+    stationNode.data("destination", "True");
+    stationNode.data("depart", "False");
+
+    // If clicking again on the departure station, deselect it
+  } else if (stationName === departStation) {
+    const prevDepartNode = cy.$(`node[name="${departStation}"]`);
+    prevDepartNode.data("depart", "False");
+    departStation = null;
+
+    // If clicking again on the arrival station, deselect it
+  } else if (stationName === arriveStation) {
+    const prevArriveNode = cy.$(`node[name="${arriveStation}"]`);
+    prevArriveNode.data("destination", "False");
+    arriveStation = null;
+  }
+
+  updateUI();
+
+  // If both stations are selected, we could proceed to path calculation (TODO)
+  if (departStation && arriveStation) {
+    // TODO: send selected stations to backend or perform path calculation
+  }
+}
+
+/**
+ * Updates the UI to reflect the currently selected stations.
+ */
+function updateUI() {
+  selectedStationsDisplay.textContent = `Selected: ${
+    departStation || "None"
+  } -> ${arriveStation || "None"}`;
+  fastestPathDisplay.textContent = "Path: None";
+}
