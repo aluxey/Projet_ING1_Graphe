@@ -189,7 +189,7 @@ def trier_choix_lignes(choix_l: [(int, str)], temps: int):
             # print("garde la meme ligne")
             if doit_changer_direction(init[0], next[0], ligne):
                 # print("changement...")
-                print(f"Prenez la ligne {ligne} direction {get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne)} jusqu'à {get_station_by_id(fin[0]).name}")
+                print(f"Prenez la ligne {ligne} direction {" ou ".join(get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne))} jusqu'à {get_station_by_id(fin[0]).name}")
                 # print("...changement")
                 init = fin
             fin = next
@@ -198,17 +198,17 @@ def trier_choix_lignes(choix_l: [(int, str)], temps: int):
         else: # changement de ligne
             # print("change de ligne")
             if doit_marcher:
-                print(f"Prenez la ligne {ligne} direction {get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne)} jusqu'à {get_station_by_id(fin[0]).name}")
+                print(f"Prenez la ligne {ligne} direction {" ou ".join(get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne))} jusqu'à {get_station_by_id(fin[0]).name}")
                 print(f"Marchez jusqu'à la station {get_station_by_id(next[0]).name}")
             else:
-                print(f"Prenez la ligne {ligne} direction {get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne)} jusqu'à {get_station_by_id(next[0]).name}")
+                print(f"Prenez la ligne {ligne} direction {" ou ".join(get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne))} jusqu'à {get_station_by_id(next[0]).name}")
             affiche_indication = True
             init = next
             ligne = init[1].split("-", 1)[0]
             doit_marcher = False
         if index_parcours == (len(choix_lignes) - 1): # si on est sur le dernier sommet
             if not affiche_indication:
-                print(f"Prenez la ligne {ligne} direction {get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne)} jusqu'à {get_station_by_id(next[0]).name}")
+                print(f"Prenez la ligne {ligne} direction {" ou ".join(get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne))} jusqu'à {get_station_by_id(next[0]).name}")
             print(f"Vous devriez arriver à {get_station_by_id(next[0]).name} en {temps} minutes")
             est_fini = True
         else:
@@ -228,7 +228,6 @@ eglise: Station = Station(4, "eglise", {"3": "2"}, False, [])
 issac: Station = Station(5, "issac", {"3": "2"}, True, [])
 zola: Station = Station(6, "zola", {"3": "1"}, False, [])
 lycee: Station = Station(7, "lycee", {"3": "1", "84": "0"}, False, [])
-# lycee: Station = Station(7, "lycee", {"3": "1"}, False, [])
 villepreux: Station = Station(8, "villepreux", {"3": "1"}, True, [])
 proust: Station = Station(9, "proust", {"84": "0"}, True, [])
 cantinole: Station = Station(10, "cantinole", {"84": "0"}, False, [])
@@ -264,14 +263,57 @@ cinq_chemins.voisins.append((cantinole, 3))
 cinq_chemins.voisins.append((aeroport, 2))
 aeroport.voisins.append((cinq_chemins, 2))
 
-all_stations = [quinconces, mairie, republique, eglise, issac, zola, lycee, villepreux, proust, cantinole, aulnes, rostand,
-                cinq_chemins, aeroport]
+
+
+arret3_1: Station = Station(1, "TERM 3 - 1", {"3": "0"}, True, [])
+arret3_2: Station = Station(2, "arret 3 - 2", {"3": "0"}, False, [])
+arret3_4: Station = Station(4, "TERM 3 - 4", {"3": "0"}, True, [])
+
+arret71_84_1: Station = Station(5, "TERM 71 - 1", {"71": "0", "84": "0"}, True, [])
+arret3_71_84: Station = Station(6, "arret 3 / 71 / 84 - 2", {"71": "0", "3": "0", "84": "0"}, False, [])
+arret71_84_3: Station = Station(7, "arret 71 / 84 - 3", {"71": "0", "84": "0"}, False, [])
+arret71_84_4: Station = Station(8, "arret 71 / 84 - 4", {"71": "0", "84": "0"}, False, [])
+arret71_84_5: Station = Station(9, "arret 71 / 84 - 5", {"71": "0", "84": "0"}, True, [])
+arret71_84_6: Station = Station(10, "TERM 71 / 84 - 6", {"84": "0"}, True, [])
+
+arret35_1: Station = Station(17, "TERM 35 - 1", {"35": "0"}, True, [])
+arret35_2: Station = Station(18, "arret 35 - 2", {"35": "0"}, False, [])
+arret35_3: Station = Station(19, "TERM 35 - 3", {"35": "0"}, True, [])
+
+arret3_1.voisins.append((arret3_2, 1))
+arret3_2.voisins.append((arret3_1, 1))
+arret3_2.voisins.append((arret3_71_84, 1))
+arret3_4.voisins.append((arret3_71_84, 1))
+
+arret71_84_1.voisins.append((arret3_71_84, 1))
+arret3_71_84.voisins.append((arret71_84_1, 1))
+arret3_71_84.voisins.append((arret71_84_3, 1))
+arret3_71_84.voisins.append((arret3_2, 1))
+arret3_71_84.voisins.append((arret3_4, 1))
+arret71_84_3.voisins.append((arret3_71_84, 1))
+arret71_84_3.voisins.append((arret71_84_4, 1))
+arret71_84_4.voisins.append((arret71_84_3, 1))
+arret71_84_4.voisins.append((arret71_84_5, 1))
+arret71_84_5.voisins.append((arret71_84_4, 1))
+arret71_84_5.voisins.append((arret71_84_6, 1))
+arret71_84_6.voisins.append((arret71_84_5, 1))
+arret71_84_6.voisins.append((arret35_1, 1))
+
+arret35_1.voisins.append((arret71_84_6, 1))
+arret35_1.voisins.append((arret35_2, 1))
+arret35_2.voisins.append((arret35_1, 1))
+arret35_2.voisins.append((arret35_3, 1))
+arret35_3.voisins.append((arret35_2, 1))
+
+all_stations = [quinconces, mairie, republique, eglise, issac, zola, lycee, villepreux, proust,
+                cantinole, aulnes, rostand, cinq_chemins, aeroport]
+# all_stations = [arret3_1, arret3_2, arret3_4, arret71_84_1, arret3_71_84, arret71_84_3, arret71_84_4,
+#                 arret71_84_5, arret71_84_6, arret35_1, arret35_2, arret35_3]
 
 
 
-
-premiere_station = rostand
-derniere_station = aeroport
+premiere_station = mairie
+derniere_station = cantinole
 dijkstra_test = dijkstra(premiere_station, derniere_station)
 print(premiere_station.name + " -> " + derniere_station.name)
 if dijkstra_test is None:
@@ -279,6 +321,6 @@ if dijkstra_test is None:
 else:
     choix_l = choix_lignes(dijkstra_test, derniere_station.id)
     print(choix_l)
-    trier_choix_lignes(choix_l, 10)
+    trier_choix_lignes(choix_l, dijkstra_test[derniere_station.id][1])
 
 print()
