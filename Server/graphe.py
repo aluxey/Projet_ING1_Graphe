@@ -35,6 +35,7 @@ class Station:
     def get_essential_info(self):
         return f"{self.name} ({self.id})"
 
+
 def dijkstra(depart: Station, arrivee: Station):
     # Pour chaque id station : id station provenance + le temps pour arriver à la station en question depuis le debut
     stations: {int: Tuple[int, int]} = {}
@@ -46,7 +47,6 @@ def dijkstra(depart: Station, arrivee: Station):
     no_station_available: bool = False
 
     while current_station[0] != arrivee.id and not no_station_available:
-        print(current_station[0])
         stations_traitees.append(current_station[0])
 
         real_station = get_station_by_id(current_station[0])
@@ -79,7 +79,6 @@ def dijkstra(depart: Station, arrivee: Station):
         else:
             current_station = selected_station
 
-    print(current_station[0])
     # gerer le cas où dijkstra plante :
     if no_station_available:
         return None
@@ -92,32 +91,29 @@ def get_station_by_id(station_id):
             return station
     return None
 
-def trouver_chemin(tab_dijkstra, debut: Station, fin: Station):
-    current_id = fin.id
-    while current_id != debut.id:
-        print(get_station_by_id(current_id).name)
-        current_id = tab_dijkstra[current_id][0]
-    print(debut.name)
 
-def get_common_line(station1: Station, station2: Station):
-    return station1.lignes.keys() & station2.lignes.keys()
-
-def calcul_direction(deja_vu: List, lst_terminus: set, current: Station, final_dest: Station, ligne: str, trouve: bool):
+def calcul_direction(deja_vu: List, lst_terminus: set, current: Station, final_dest: Station, ligne: str, trouve: bool, branchement_initial: str):
     new_trouve = trouve or current.id == final_dest.id
     deja_vu.append(current.id)
     for voisin in current.voisins:
         if (voisin[0].id not in deja_vu) and (ligne in voisin[0].lignes.keys()):
-            # deja_vu.append(voisin[0].id)
-            if voisin[0].terminus:
-                if new_trouve:
-                    lst_terminus.add(voisin[0].name)
-            else:
-                calcul_direction(deja_vu, lst_terminus, voisin[0], final_dest, ligne, new_trouve)
+            # si on est initialement sur le branchement 0
+            # OU on arrive sur le branchement 0
+            # OU on est sur le meme branchement
+            if branchement_initial == "0" or voisin[0].lignes[ligne] == "0" or branchement_initial == voisin[0].lignes[ligne]:
+                if voisin[0].terminus:
+                    if new_trouve or voisin[0].id == final_dest.id:
+                        lst_terminus.add(voisin[0].name)
+                else:
+                    calcul_direction(deja_vu, lst_terminus, voisin[0], final_dest, ligne, new_trouve, branchement_initial)
+
 
 def get_all_possible_destinations(first_station: Station, last_station: Station, ligne: str):
+    # print(f"de {first_station.name} vers {last_station.name}")
     terminus = set()
-    calcul_direction([], terminus, first_station, last_station, ligne, False)
+    calcul_direction([], terminus, first_station, last_station, ligne, False, first_station.lignes[ligne])
     return terminus
+
 
 def get_ligne_optimale(dijkstra: {int: Tuple[int, int]}, initial: Station):
     current = initial
@@ -125,7 +121,6 @@ def get_ligne_optimale(dijkstra: {int: Tuple[int, int]}, initial: Station):
     while len(lst_lignes) != 0 or len(lst_lignes) != 1:
         current = get_station_by_id(dijkstra[current.id][0])
         lst_lignes_suivantes = lst_lignes & current.lignes.keys()
-        print(lst_lignes_suivantes)
         if len(lst_lignes_suivantes) == 1:
             return next(iter(lst_lignes_suivantes)) # taille 1, donc le seul élément
         if len(lst_lignes_suivantes) == 0:
@@ -136,9 +131,10 @@ def get_ligne_optimale(dijkstra: {int: Tuple[int, int]}, initial: Station):
     if len(lst_lignes) == 0:
         return None #
 
+
 def choix_lignes(dijkstra: {int: Tuple[int, int]}, arrivee: int):
     ligne_choisie: str = None
-    ligne_par_arret = []#: [(int, str)] = []
+    ligne_par_arret: [(int, str)] = []
     current = get_station_by_id(arrivee)
     ligne_par_arret.append((current.id, get_ligne_optimale(dijkstra, current)))
     while current.id in dijkstra:
@@ -155,10 +151,27 @@ def choix_lignes(dijkstra: {int: Tuple[int, int]}, arrivee: int):
     return ligne_par_arret
 
 
+def doit_changer_direction(init: int, next: int, ligne: str):
+    # si init et next sont sur le meme branchement
+    if get_station_by_id(init).lignes[ligne] == get_station_by_id(next).lignes[ligne]:
+        return False
+
+    # si on est initialement sur le branchement 0
+    if get_station_by_id(init).lignes[ligne] == "0":
+        return False
+
+    # si on arrive sur le branchement 0
+    if get_station_by_id(next).lignes[ligne] == "0":
+        return False
+
+    # si on arrive sur un autre branchement que 0 et qu'on vient d'un autre branchement que 0
+    print(f"je doit changer de direction pour aller de {init} à {next}")
+    return True
 
 
 
-def trier_choix_lignes(choix_l: [(int, str)], dijkstra: {int: Tuple[int, int]}, temps: int):
+
+def trier_choix_lignes(choix_l: [(int, str)], temps: int):
     choix_lignes = choix_l
     choix_lignes.reverse()
     index_parcours = 0
@@ -173,10 +186,17 @@ def trier_choix_lignes(choix_l: [(int, str)], dijkstra: {int: Tuple[int, int]}, 
     print(f"Débutez à la station {get_station_by_id(init[0]).name}")
     while not est_fini:
         if next[1] == init[1] or next[1].startswith(init[1] + "-"): # on peut rester sur la meme ligne
+            # print("garde la meme ligne")
+            if doit_changer_direction(init[0], next[0], ligne):
+                # print("changement...")
+                print(f"Prenez la ligne {ligne} direction {get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne)} jusqu'à {get_station_by_id(fin[0]).name}")
+                # print("...changement")
+                init = fin
             fin = next
             if next[1].startswith(init[1] + "-"):
                 doit_marcher = True
         else: # changement de ligne
+            # print("change de ligne")
             if doit_marcher:
                 print(f"Prenez la ligne {ligne} direction {get_all_possible_destinations(get_station_by_id(init[0]), get_station_by_id(fin[0]), ligne)} jusqu'à {get_station_by_id(fin[0]).name}")
                 print(f"Marchez jusqu'à la station {get_station_by_id(next[0]).name}")
@@ -249,31 +269,16 @@ all_stations = [quinconces, mairie, republique, eglise, issac, zola, lycee, vill
 
 
 
-dijkstra_test = dijkstra(mairie, cantinole)
+
+premiere_station = rostand
+derniere_station = aeroport
+dijkstra_test = dijkstra(premiere_station, derniere_station)
+print(premiere_station.name + " -> " + derniere_station.name)
 if dijkstra_test is None:
-    print("envie de creuver")
+    print("Probleme")
 else:
-    print(dijkstra_test)
-
-
-t = get_all_possible_destinations(lycee, republique, "3")
-print(t)
+    choix_l = choix_lignes(dijkstra_test, derniere_station.id)
+    print(choix_l)
+    trier_choix_lignes(choix_l, 10)
 
 print()
-trouver_chemin(dijkstra_test, mairie, cantinole)
-
-t1: Station = Station(1, "t1", {"71": "1", "3": "2", "8": "0"}, True, [])
-t2: Station = Station(1, "t1", {"3": "0", "8": "1", "80": "1"}, True, [])
-print(get_common_line(t1, t2))
-
-print()
-choix_l = choix_lignes(dijkstra_test, cantinole.id)
-
-print(choix_l)
-trier_choix_lignes(choix_l, None, 10)
-
-
-
-testt = get_all_possible_destinations(cantinole, aulnes, "84")
-print()
-print(testt)
