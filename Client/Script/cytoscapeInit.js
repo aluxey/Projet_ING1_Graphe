@@ -4,7 +4,7 @@ import { loadMetroData, buildElements } from "./data.js";
 import { addCytoscapeEvents } from "./events.js";
 
 export let cy = null; // Export so other files can use it if needed
-
+  
 export async function initCytoscape() {
   const data = await loadMetroData();
   const elements = buildElements(data);

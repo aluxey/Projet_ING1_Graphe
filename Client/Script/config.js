@@ -68,4 +68,15 @@ export const cyStyle = [
       "font-weight": "bold",
     },
   },
+  {
+    selector: ".highlighted",
+    style: {
+      "background-color": "red", // Highlighted nodes
+      "line-color": "red", // Highlighted edges
+      "target-arrow-color": "red",
+      "target-arrow-shape": "triangle",
+      "transition-property": "background-color, line-color, target-arrow-color",
+      "transition-duration": "0.3s",
+    },
+  },
 ];

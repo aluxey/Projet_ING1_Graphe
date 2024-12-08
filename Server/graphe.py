@@ -191,7 +191,10 @@ def get_full_itineraire(choix_l: [(int, str)], temps: int):
         fin_station = get_station_by_id(fin[0], all_stations)
         if next[1] == init[1] or next[1].startswith(init[1] + "-"): # on peut rester sur la meme ligne
             if doit_changer_direction(init[0], next[0], ligne):
-                itineraire.append(f"Prenez la ligne {ligne} direction {" ou ".join(get_all_possible_destinations(init_station, fin_station, ligne))} jusqu'à {fin_station.name}")
+                itineraire.append(
+                    f"Prenez la ligne {ligne} direction {' ou '.join(get_all_possible_destinations(init_station, fin_station, ligne))} jusqu'à {fin_station.name}"
+                )
+
                 init = fin
             fin = next
             if next[1].startswith(init[1] + "-"):
@@ -199,10 +202,12 @@ def get_full_itineraire(choix_l: [(int, str)], temps: int):
         else: # changement de ligne
             next_station = get_station_by_id(next[0], all_stations)
             if doit_marcher:
-                itineraire.append(f"Prenez la ligne {ligne} direction {" ou ".join(get_all_possible_destinations(init_station, fin_station, ligne))} jusqu'à {fin_station.name}")
+                directions = " ou ".join(get_all_possible_destinations(init_station, fin_station, ligne))
+                itineraire.append(f"Prenez la ligne {ligne} direction {directions} jusqu'à {fin_station.name}")
                 itineraire.append(f"Marchez jusqu'à la station {next_station.name}")
             else:
-                itineraire.append(f"Prenez la ligne {ligne} direction {" ou ".join(get_all_possible_destinations(init_station, fin_station, ligne))} jusqu'à {next_station.name}")
+                directions = " ou ".join(get_all_possible_destinations(init_station, fin_station, ligne))
+                itineraire.append(f"Prenez la ligne {ligne} direction {directions} jusqu'à {next_station.name}")
             affiche_indication = True
             init = next
             ligne = init[1].split("-", 1)[0]
@@ -210,7 +215,8 @@ def get_full_itineraire(choix_l: [(int, str)], temps: int):
         if index_parcours == (len(choix_lignes) - 1): # si on est sur le dernier sommet
             next_station = get_station_by_id(next[0], all_stations)
             if not affiche_indication:
-                itineraire.append(f"Prenez la ligne {ligne} direction {" ou ".join(get_all_possible_destinations(init_station, fin_station, ligne))} jusqu'à {next_station.name}")
+                directions = " ou ".join(get_all_possible_destinations(init_station, fin_station, ligne))
+                itineraire.append(f"Prenez la ligne {ligne} direction {directions} jusqu'à {fin_station.name}")
             itineraire.append(f"Vous devriez arriver à {next_station.name} en {temps} secondes")
             est_fini = True
         else:

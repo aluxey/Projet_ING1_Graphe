@@ -1,3 +1,5 @@
+import { cy } from "./cytoscapeInit.js";
+
 let firstSelectedNode = null;
 let secondSelectedNode = null;
 
@@ -37,6 +39,14 @@ export function addCytoscapeEvents(cy) {
   cy.on("mouseout", "node", () => hideTooltip(tooltip));
   cy.on("mousemove", (event) => moveTooltip(event, tooltip));
   cy.on("click", "node", (event) => handleNodeClick(event.target));
+
+  cy.on("tap", (event) => {
+    if (event.target === cy) {
+      cy.elements().removeClass("highlighted"); // Clear highlights
+      console.log("Graph reset to default state.");
+    }
+  });
+
 }
 
 /**
@@ -156,22 +166,23 @@ function resetAndSelectFirstNode(node) {
  */
 async function parcours() {
   if (firstSelectedNode && secondSelectedNode) {
-    const depart = firstSelectedNode.data("id"); // Assuming `id` is unique for each station
-    const arrive = secondSelectedNode.data("id");
+    const depart = firstSelectedNode.data("id").split("-")[1]; // Assuming `id` is unique for each station
+    const arrive = secondSelectedNode.data("id").split("-")[1];
 
     console.log(`Requesting parcours from ${depart} to ${arrive}`);
 
     try {
       const response = await fetch(
-        `http://your-backend-endpoint/dijkstra?depart=${depart}&arrive=${arrive}`
+        `http://127.0.0.1:5000/dijkstra?s1=${depart}&s2=${arrive}`
       );
 
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       }
-
+      console.log(response);
       const data = await response.json();
-      showparcours(data); // Pass the data to a rendering function
+      console.log(data);
+      showparcours(data); 
     } catch (error) {
       console.error("Failed to fetch parcours:", error);
     }
@@ -186,25 +197,74 @@ function showparcours(data) {
 
   if (!data || !data.data) {
     console.error("Invalid data received from the backend.");
+    itineraryContainer.innerHTML = "<li>No route found.</li>";
+    timeInfo.textContent = "";
     return;
   }
+
+  // Extract response data
+  const steps = data.data.itineraire || [];
+  const stations = data.data.stations || [];
+  const totalTime = data.data.temps || 0;
 
   // Clear previous content
   itineraryContainer.innerHTML = "";
   timeInfo.textContent = "";
 
   // Display the itinerary steps
-  const steps = data.data.itineraire;
-  steps.forEach((step) => {
-    const stepElement = document.createElement("li");
-    stepElement.textContent = step;
-    itineraryContainer.appendChild(stepElement);
-  });
+  if (steps.length > 0) {
+    steps.forEach((step) => {
+      const stepElement = document.createElement("li");
+      stepElement.textContent = step;
+      itineraryContainer.appendChild(stepElement);
+    });
+  } else {
+    const noStepsElement = document.createElement("li");
+    noStepsElement.textContent = "No itinerary steps available.";
+    itineraryContainer.appendChild(noStepsElement);
+  }
 
   // Display the total time
-  const totalTime = data.data.temps;
-  timeInfo.textContent = `You will take ${Math.round(
-    totalTime / 60
-  )} minutes to reach your destination.`;
+  timeInfo.textContent =
+    totalTime > 0
+      ? `Estimated travel time: ${Math.round(totalTime / 60)} minutes`
+      : "Travel time unavailable";
+
+  // Highlight the path on the graph
+  highlightPath(stations);
 }
 
+function highlightPath(stations) {
+  console.log("Stations data for highlighting:", stations);
+
+  if (!cy || typeof cy.elements !== "function") {
+    console.error("Invalid Cytoscape instance passed to highlightPath.");
+    return;
+  }
+
+  // Reset all highlights
+  cy.elements().removeClass("highlighted");
+
+  if (!Array.isArray(stations) || stations.length === 0) {
+    console.warn("No stations to highlight.");
+    return;
+  }
+
+  // Highlight nodes and edges along the path
+  stations.forEach(([source, target]) => {
+    console.log(`Highlighting edge from ${source} to ${target}`);
+    const edge = cy.edges(`[source="${source}"][target="${target}"]`);
+    const sourceNode = cy.nodes(`#${source}`);
+    const targetNode = cy.nodes(`#${target}`);
+
+    if (edge.length) edge.addClass("highlighted");
+    if (sourceNode.length) sourceNode.addClass("highlighted");
+    if (targetNode.length) targetNode.addClass("highlighted");
+  });
+
+  // Optionally fit view to the highlighted path
+  const highlightedElements = cy.elements(".highlighted");
+  if (highlightedElements.length > 0) {
+    cy.fit(highlightedElements, 50); // Fit to the highlighted elements with padding
+  }
+}
