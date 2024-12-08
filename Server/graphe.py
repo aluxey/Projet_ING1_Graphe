@@ -364,7 +364,7 @@ def execute_dijkstra():
         }
     else:
         choix_l = choix_lignes(dijkstra_test, derniere_station.id)
-        sommets = transformed = [(choix_l[i][0], int(choix_l[i+1][0])) for i in range(len(choix_l)-1)]
+        sommets = [(choix_l[i][0], int(choix_l[i+1][0])) for i in range(len(choix_l)-1)]
         itineraire = get_full_itineraire(choix_l, dijkstra_test[derniere_station.id][1])
 
         response = {
