@@ -181,9 +181,19 @@ async function parcours() {
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       }
-      console.log(response);
+
+      console.log(
+        "Full Dijkstra response data:",
+        JSON.stringify(data, null, 2)
+      );
+
+
       const data = await response.json();
-      console.log(data);
+      console.log("Dijkstra response data:", data);
+
+      const stations = data.data?.stations || [];
+      console.log("Stations data for highlighting:", stations);
+
       showparcours(data);
     } catch (error) {
       console.error("Failed to fetch parcours:", error);
@@ -295,12 +305,31 @@ async function kruskal() {
     if (!response.ok) {
       throw new Error(`Server error: ${response.status}`);
     }
+
     console.log(response);
     const data = await response.json();
     console.log(data);
-    showparcours(data);
+    showparcoursKruskal(data);
+
   } catch (error) {
     console.error("Failed to fetch parcours:", error);
   }
   console.error("Please select departure and destination stations.");
+}
+
+
+function showparcoursKruskal(data) {
+  
+
+  if (!data || !data.data) {
+    console.error("Invalid data received from the backend.");
+    itineraryContainer.innerHTML = "<li>No route found.</li>";
+    timeInfo.textContent = "";
+    return;
+  }
+
+  // Extract response data
+  const aretes = data.data.aretes || [];
+  // Highlight the path on the graph
+  highlightPath(aretes);
 }
