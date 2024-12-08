@@ -154,13 +154,63 @@ function resetAndSelectFirstNode(node) {
 /**
  * Handle the "Show Parcours" button click.
  */
-function parcours() {
+async function parcours() {
   if (firstSelectedNode && secondSelectedNode) {
-    const depart = firstSelectedNode.data("name");
-    const arrive = secondSelectedNode.data("name");
+    const depart = firstSelectedNode.data("id"); // Assuming `id` is unique for each station
+    const arrive = secondSelectedNode.data("id");
 
-    console.log(`Parcours from ${depart} to ${arrive}`);
+    console.log(`Requesting parcours from ${depart} to ${arrive}`);
+
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/dijkstra`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          depart,
+          arrive,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      showparcours(data); // Pass the data to a rendering function
+    } catch (error) {
+      console.error("Failed to fetch parcours:", error);
+    }
   } else {
     console.error("Please select departure and destination stations.");
   }
+}
+
+function showparcours(data) {
+  const itineraryContainer = document.getElementById("itinerary");
+  const timeInfo = document.getElementById("time");
+
+  if (!data || !data.data) {
+    console.error("Invalid data received from the backend.");
+    return;
+  }
+
+  // Clear previous content
+  itineraryContainer.innerHTML = "";
+  timeInfo.textContent = "";
+
+  // Display the itinerary steps
+  const steps = data.data.itineraire;
+  steps.forEach((step) => {
+    const stepElement = document.createElement("li");
+    stepElement.textContent = step;
+    itineraryContainer.appendChild(stepElement);
+  });
+
+  // Display the total time
+  const totalTime = data.data.temps;
+  timeInfo.textContent = `You will take ${Math.round(
+    totalTime / 60
+  )} minutes to reach your destination.`;
 }
