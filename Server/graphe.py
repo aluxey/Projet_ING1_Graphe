@@ -216,6 +216,40 @@ def get_full_itineraire(choix_l: [(int, str)], temps: int):
             next = choix_lignes[index_parcours]
     return itineraire
 
+def kruskal(depart: Station):
+    non_vu = []
+    deja_vu: List[Station] = []
+    aretes: [[int, int]] = []
+
+    for station in all_stations:
+        non_vu.append(station.id)
+
+    current = depart
+    deja_vu.append(current)
+    non_vu.remove(current.id)
+    while len(non_vu) > 0:
+        # liste de Tuple(station1, station2, cout)
+        arretes_eligibles: List[Tuple[Station, Station, int]] = []
+        # toutes les stations deja_vu
+        for station in deja_vu:
+            # tous les voisins de ces stations
+            for voisin in station.voisins:
+                # voisin non_vu = ne fait pas de boucle
+                if voisin[0].id in non_vu:
+                    # arrete entre la station et son voisin est éligible
+                    arretes_eligibles.append((station, voisin[0], voisin[1]))
+        if len(arretes_eligibles) > 0:
+            # tri les aretes par cout croissant
+            arretes_eligibles.sort(key=lambda x: x[2])
+            aretes.append([arretes_eligibles[0][0].id, arretes_eligibles[0][1].id])
+            deja_vu.append(arretes_eligibles[0][1])
+            non_vu.remove(arretes_eligibles[0][1].id)
+        else:
+            return aretes
+    return aretes
+
+
+
 def create_data():
     # Chemin du fichier
     file_path = "../Data/metro.txt"
@@ -276,7 +310,7 @@ def execute_dijkstra():
         }
     else:
         choix_l = choix_lignes(dijkstra_test, derniere_station.id)
-        sommets = [item[0] for item in choix_l]
+        sommets = transformed = [(choix_l[i][0], int(choix_l[i+1][0])) for i in range(len(choix_l)-1)]
         itineraire = get_full_itineraire(choix_l, dijkstra_test[derniere_station.id][1])
 
         response = {
@@ -289,6 +323,21 @@ def execute_dijkstra():
         }
 
     # Retourner une réponse JSON
+    return jsonify(response)
+
+@app.route('/kruskal', methods=['GET'])
+def execute_kruskal():
+    depart = int(request.args.get('depart'))
+    depart_station = get_station_by_id(depart, all_stations)
+    aretes = kruskal(depart_station)
+
+    response = {
+        "status": 200,
+        "data": {
+            "aretes": aretes
+        }
+    }
+
     return jsonify(response)
 
 all_stations = create_data()
