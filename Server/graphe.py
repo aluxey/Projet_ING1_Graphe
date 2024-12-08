@@ -370,7 +370,7 @@ def execute_dijkstra():
         response = {
             "status": 200,
             "data": {
-                "stations": sommets,
+                "stations": sommets.reverse(),
                 "itineraire": itineraire,
                 "temps": dijkstra_test[derniere_station.id][1]
             }
