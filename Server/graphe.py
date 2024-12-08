@@ -437,8 +437,6 @@ def execute_kruskal():
     return jsonify(response)
 
 all_stations = create_data()
-# ajoute la connexite
-creer_connexite()
 
 if __name__ == '__main__':
     app.run(debug=True)
