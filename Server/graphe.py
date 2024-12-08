@@ -225,7 +225,7 @@ def get_full_itineraire(choix_l: [(int, str)], temps: int):
             next = choix_lignes[index_parcours]
     return itineraire
 
-def kruskal(depart: Station):
+def prim(depart: Station):
     non_vu = []
     deja_vu: List[Station] = []
     aretes: [[int, int]] = []
@@ -257,7 +257,61 @@ def kruskal(depart: Station):
             return aretes
     return aretes
 
+def mettre_a_jour_deja_vu(deja_vu: List[List[Station]], current: [Station, Station], aretes: [[int, int]]) -> None:
+    station_a = current[0]
+    station_b = current[1]
+    index_a = None
+    index_b = None
 
+    # Trouver les sous-listes contenant les stations
+    for idx, sous_liste in enumerate(deja_vu):
+        if station_a in sous_liste:
+            index_a = idx
+        if station_b in sous_liste:
+            index_b = idx
+
+    # Cas 1 : Aucune station n'est dans deja_vu
+    if index_a is None and index_b is None:
+        deja_vu.append([station_a, station_b])
+        aretes.append([current[0].id, current[1].id])
+
+    # Cas 2 : Une seule station est dans deja_vu
+    elif index_a is not None and index_b is None:
+        deja_vu[index_a].append(station_b)
+        aretes.append([current[0].id, current[1].id])
+    elif index_a is None and index_b is not None:
+        deja_vu[index_b].append(station_a)
+        aretes.append([current[0].id, current[1].id])
+
+    # Cas 3 : Les deux stations sont dans des sous-listes différentes
+    elif index_a is not None and index_b is not None and index_a != index_b:
+        # Fusionner les deux sous-listes
+        deja_vu[index_a].extend(deja_vu[index_b])
+        del deja_vu[index_b]
+        aretes.append([current[0].id, current[1].id])
+
+    # Cas 4 : Les deux stations sont déjà dans la même sous-liste
+    # Rien à faire dans ce cas
+
+def kruskal():
+    deja_vu: List[List[Station]] = []
+    aretes: [[int, int]] = []
+
+    aretes_eligibles: List[Tuple[Station, Station, int]] = []
+
+    for station in all_stations:
+        for voisin in station.voisins:
+            aretes_eligibles.append((station, voisin[0], voisin[1]))
+
+    # Trier les arêtes par poids (le dernier élément du tuple)
+    aretes_eligibles.sort(key=lambda x: x[2])
+
+    while len(aretes_eligibles) > 0:
+        current_arete = [aretes_eligibles[0][0], aretes_eligibles[0][1]]
+        mettre_a_jour_deja_vu(deja_vu, current_arete, aretes)
+        del aretes_eligibles[0]
+
+    return aretes
 
 def create_data():
     # Chemin du fichier
@@ -320,13 +374,13 @@ def execute_dijkstra():
         }
     else:
         choix_l = choix_lignes(dijkstra_test, derniere_station.id)
-        sommets = transformed = [(choix_l[i][0], int(choix_l[i+1][0])) for i in range(len(choix_l)-1)]
+        sommets = [(choix_l[i][0], int(choix_l[i+1][0])) for i in range(len(choix_l)-1)]
         itineraire = get_full_itineraire(choix_l, dijkstra_test[derniere_station.id][1])
 
         response = {
             "status": 200,
             "data": {
-                "stations": sommets,
+                "stations": sommets.reverse(),
                 "itineraire": itineraire,
                 "temps": dijkstra_test[derniere_station.id][1]
             }
@@ -335,11 +389,24 @@ def execute_dijkstra():
     # Retourner une réponse JSON
     return jsonify(response)
 
-@app.route('/kruskal', methods=['GET'])
-def execute_kruskal():
+@app.route('/prim', methods=['GET'])
+def execute_prim():
     depart = int(request.args.get('depart'))
     depart_station = get_station_by_id(depart, all_stations)
-    aretes = kruskal(depart_station)
+    aretes = prim(depart_station)
+
+    response = {
+        "status": 200,
+        "data": {
+            "aretes": aretes
+        }
+    }
+
+    return jsonify(response)
+
+@app.route('/kruskal', methods=['GET'])
+def execute_kruskal():
+    aretes = kruskal()
 
     response = {
         "status": 200,
