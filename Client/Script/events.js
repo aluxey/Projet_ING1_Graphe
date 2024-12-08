@@ -162,16 +162,9 @@ async function parcours() {
     console.log(`Requesting parcours from ${depart} to ${arrive}`);
 
     try {
-      const response = await fetch(`http://127.0.0.1:5000/dijkstra`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          depart,
-          arrive,
-        }),
-      });
+      const response = await fetch(
+        `http://your-backend-endpoint/dijkstra?depart=${depart}&arrive=${arrive}`
+      );
 
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
@@ -214,3 +207,4 @@ function showparcours(data) {
     totalTime / 60
   )} minutes to reach your destination.`;
 }
+
