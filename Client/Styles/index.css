@@ -142,16 +142,28 @@ html, body {
 }
 
 .tooltip {
-  position: absolute;
   display: none;
-  background: rgba(0, 0, 0, 0.8);
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.8);
   color: white;
-  padding: 8px;
-  border-radius: 4px;
-  font-size: 13px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
   pointer-events: none;
   z-index: 10;
 }
+
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.8);
+}
+
+
 
 /* Style du nœud sélectionné, si vous l'utilisez */
 .selected {
