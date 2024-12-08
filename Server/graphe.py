@@ -49,7 +49,7 @@ def get_connexe(test_stations, missing_stations, station: Station):
 def creer_connexite():
     init = all_stations[0]
     test_stations = [init]
-    missing_stations = all_stations
+    missing_stations = all_stations.copy()
     missing_stations.remove(init)
     get_connexe(test_stations, missing_stations, init)
 
@@ -437,6 +437,8 @@ def execute_kruskal():
     return jsonify(response)
 
 all_stations = create_data()
+# creer connexite
+creer_connexite()
 
 if __name__ == '__main__':
     app.run(debug=True)

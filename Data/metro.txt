@@ -12,6 +12,7 @@ PS : vous pouvez observez que les derniers arrêtes correspondent au temps de co
 
 --------- 2) Les données ----------------------------------------
 V 0000 Abbesses ;12 ;False 0
+V 9999 test ;12 ;False 0
 V 0001 Alexandre Dumas ;2 ;False 0
 V 0002 Alma Marceau ;9 ;False 0
 V 0003 Alésia ;4 ;False 0
