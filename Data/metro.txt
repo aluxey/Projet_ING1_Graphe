@@ -4,7 +4,7 @@
 
 # format pour les sommets :
 V num_sommet nom_sommet numéro_ligne si_terminus branchement (0 stations en commun, 1 pour la direction 1,  2 pour la direction 2, etc ...)
-    
+
 # format pour les arrêtes :
 E num_sommet1 num_sommet2 temps_en_secondes 
 
