@@ -39,6 +39,23 @@ class Station:
     def get_essential_info(self):
         return f"{self.name} ({self.id})"
 
+def get_connexe(test_stations, missing_stations, station: Station):
+    for voisin in station.voisins:
+        if voisin[0] not in test_stations:
+            test_stations.append(voisin[0])
+            missing_stations.remove(voisin[0])
+            get_connexe(test_stations, missing_stations, voisin[0])
+
+def creer_connexite():
+    init = all_stations[0]
+    test_stations = [init]
+    missing_stations = all_stations
+    missing_stations.remove(init)
+    get_connexe(test_stations, missing_stations, init)
+
+    for station in missing_stations:
+        station.voisins.append((init, 1000))
+        init.voisins.append((station, 1000))
 
 def dijkstra(depart: Station, arrivee: Station):
     # Pour chaque id station : id station provenance + le temps pour arriver à la station en question depuis le debut
@@ -420,6 +437,8 @@ def execute_kruskal():
     return jsonify(response)
 
 all_stations = create_data()
+# ajoute la connexite
+creer_connexite()
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -11,7 +11,6 @@ E num_sommet1 num_sommet2 temps_en_secondes
 PS : vous pouvez observez que les derniers arrêtes correspondent au temps de correspondance dans une même station.
 
 --------- 2) Les données ----------------------------------------
-
 V 0000 Abbesses ;12 ;False 0
 V 0001 Alexandre Dumas ;2 ;False 0
 V 0002 Alma Marceau ;9 ;False 0
