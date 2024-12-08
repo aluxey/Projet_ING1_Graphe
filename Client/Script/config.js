@@ -72,7 +72,7 @@ export const cyStyle = [
     selector: ".highlighted",
     style: {
       "background-color": "red", // Highlighted nodes
-      "line-color": "red", // Highlighted edges
+      "line-color": "red",       // Highlighted edges
       "target-arrow-color": "red",
       "target-arrow-shape": "triangle",
       "transition-property": "background-color, line-color, target-arrow-color",

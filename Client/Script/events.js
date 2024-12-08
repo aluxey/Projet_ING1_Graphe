@@ -6,12 +6,14 @@ let secondSelectedNode = null;
 let departureStation = null;
 let destinationStation = null;
 let parcoursButton = null;
+let kruskalButton = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   // Initialize DOM elements
   departureStation = document.getElementById("depart");
   destinationStation = document.getElementById("arrive");
   parcoursButton = document.getElementById("parcoursButton");
+  kruskalButton = document.getElementById("kruskalButton");
 
   if (!departureStation || !destinationStation || !parcoursButton) {
     console.error("Required DOM elements not found!");
@@ -20,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Attach event to the parcours button
   parcoursButton.addEventListener("click", parcours);
+  kruskalButton.addEventListener("click", kruskal);
 });
 
 /**
@@ -46,7 +49,6 @@ export function addCytoscapeEvents(cy) {
       console.log("Graph reset to default state.");
     }
   });
-
 }
 
 /**
@@ -182,7 +184,7 @@ async function parcours() {
       console.log(response);
       const data = await response.json();
       console.log(data);
-      showparcours(data); 
+      showparcours(data);
     } catch (error) {
       console.error("Failed to fetch parcours:", error);
     }
@@ -252,10 +254,22 @@ function highlightPath(stations) {
 
   // Highlight nodes and edges along the path
   stations.forEach(([source, target]) => {
-    console.log(`Highlighting edge from ${source} to ${target}`);
-    const edge = cy.edges(`[source="${source}"][target="${target}"]`);
-    const sourceNode = cy.nodes(`#${source}`);
-    const targetNode = cy.nodes(`#${target}`);
+    const prefixedSource = `station-${source}`;
+    const prefixedTarget = `station-${target}`;
+
+    console.log(
+      `Highlighting edge from ${prefixedSource} to ${prefixedTarget}`
+    );
+
+    const edge = cy.edges(
+      `[source="${prefixedSource}"][target="${prefixedTarget}"]`
+    );
+    const sourceNode = cy.nodes(`#${prefixedSource}`);
+    const targetNode = cy.nodes(`#${prefixedTarget}`);
+
+    console.log("Edge found:", edge.data());
+    console.log("Source node found:", sourceNode.data());
+    console.log("Target node found:", targetNode.data());
 
     if (edge.length) edge.addClass("highlighted");
     if (sourceNode.length) sourceNode.addClass("highlighted");
@@ -265,6 +279,28 @@ function highlightPath(stations) {
   // Optionally fit view to the highlighted path
   const highlightedElements = cy.elements(".highlighted");
   if (highlightedElements.length > 0) {
-    cy.fit(highlightedElements, 50); // Fit to the highlighted elements with padding
+    cy.fit(highlightedElements, 50); // Fit view with padding
   }
+}
+
+async function kruskal() {
+
+  console.log(`Requesting Kruskal`);
+
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:5000/kruskal`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+    console.log(response);
+    const data = await response.json();
+    console.log(data);
+    showparcours(data);
+  } catch (error) {
+    console.error("Failed to fetch parcours:", error);
+  }
+  console.error("Please select departure and destination stations.");
 }
