@@ -182,12 +182,6 @@ async function parcours() {
         throw new Error(`Server error: ${response.status}`);
       }
 
-      console.log(
-        "Full Dijkstra response data:",
-        JSON.stringify(data, null, 2)
-      );
-
-
       const data = await response.json();
       console.log("Dijkstra response data:", data);
 
@@ -270,10 +264,11 @@ function highlightPath(stations) {
     console.log(
       `Highlighting edge from ${prefixedSource} to ${prefixedTarget}`
     );
-
+    
     const edge = cy.edges(
-      `[source="${prefixedSource}"][target="${prefixedTarget}"]`
+      `[source="${prefixedSource}"][target="${prefixedTarget}"], [source="${prefixedTarget}"][target="${prefixedSource}"]`
     );
+
     const sourceNode = cy.nodes(`#${prefixedSource}`);
     const targetNode = cy.nodes(`#${prefixedTarget}`);
 
@@ -320,14 +315,12 @@ async function kruskal() {
 
 function showparcoursKruskal(data) {
   
-
   if (!data || !data.data) {
     console.error("Invalid data received from the backend.");
     itineraryContainer.innerHTML = "<li>No route found.</li>";
     timeInfo.textContent = "";
     return;
   }
-
   // Extract response data
   const aretes = data.data.aretes || [];
   // Highlight the path on the graph
