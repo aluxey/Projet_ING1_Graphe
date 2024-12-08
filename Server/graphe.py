@@ -365,12 +365,14 @@ def execute_dijkstra():
     else:
         choix_l = choix_lignes(dijkstra_test, derniere_station.id)
         sommets = [(choix_l[i][0], int(choix_l[i+1][0])) for i in range(len(choix_l)-1)]
+        sommets_ordonne = sommets
+        sommets_ordonne.reverse()
         itineraire = get_full_itineraire(choix_l, dijkstra_test[derniere_station.id][1])
 
         response = {
             "status": 200,
             "data": {
-                "stations": sommets.reverse(),
+                "stations": sommets_ordonne,
                 "itineraire": itineraire,
                 "temps": dijkstra_test[derniere_station.id][1]
             }
