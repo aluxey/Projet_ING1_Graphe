@@ -53,9 +53,10 @@ def creer_connexite():
     missing_stations.remove(init)
     get_connexe(test_stations, missing_stations, init)
 
+    station_test = next((station for station in all_stations if station not in missing_stations), None)
     for station in missing_stations:
-        station.voisins.append((init, 1000))
-        init.voisins.append((station, 1000))
+        station.voisins.append((station_test, 1000))
+        station_test.voisins.append((station, 1000))
 
 def dijkstra(depart: Station, arrivee: Station):
     # Pour chaque id station : id station provenance + le temps pour arriver à la station en question depuis le debut
@@ -439,6 +440,7 @@ def execute_kruskal():
 all_stations = create_data()
 # creer connexite
 creer_connexite()
+print("ready")
 
 if __name__ == '__main__':
     app.run(debug=True)
